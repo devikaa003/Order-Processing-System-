@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amazon Order Processing System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📦 Amazon Order Processing System</h1>
+
+    <div class="form-section">
+      <h2>Add New Order</h2>
+      <input type="number" id="orderId" placeholder="Order ID">
+      <input type="text" id="customerName" placeholder="Customer Name">
+      <select id="orderType">
+        <option value="NORMAL">Normal</option>
+        <option value="PRIME">Prime</option>
+      </select>
+      <input type="text" id="items" placeholder="Items (comma separated)">
+      <button onclick="addOrder()">Add Order</button>
+    </div>
+
+    <div class="buttons">
+      <button onclick="processNextOrder()">🚚 Process Next Order</button>
+      <button onclick="viewPending()">📋 View Pending Orders</button>
+      <button onclick="viewCompleted()">✅ View Completed Orders</button>
+    </div>
+
+    <div id="output"></div>
+  </div>
+
+  <script>
+
+  let pendingOrders = [];
+let completedOrders = [];
+
+function addOrder() {
+  const id = document.getElementById("orderId").value;
+  const name = document.getElementById("customerName").value;
+  const type = document.getElementById("orderType").value;
+  const items = document.getElementById("items").value.split(",").map(i => i.trim());
+
+  if (!id || !name || items.length === 0) {
+    alert("Please fill all fields!");
+    return;
+  }
+
+  const order = {
+    orderId: parseInt(id),
+    customerName: name,
+    orderType: type,
+    items,
+    timestamp: Date.now()
+  };
+
+  pendingOrders.push(order);
+  document.getElementById("output").innerText = `✅ Order ${id} added (${type})`;
+  clearInputs();
+}
+
+function processNextOrder() {
+  if (pendingOrders.length === 0) {
+    document.getElementById("output").innerText = "⚠️ No orders to process.";
+    return;
+  }
+
+  // Priority: PRIME > NORMAL
+  pendingOrders.sort((a, b) => {
+    if (a.orderType === b.orderType) return a.timestamp - b.timestamp;
+    return a.orderType === "PRIME" ? -1 : 1;
+  });
+
+  const next = pendingOrders.shift();
+  completedOrders.push(next);
+  document.getElementById("output").innerText = `🚚 Processed Order ${next.orderId} (${next.customerName}) ✅`;
+}
+
+function viewPending() {
+  if (pendingOrders.length === 0) {
+    document.getElementById("output").innerText = "No pending orders.";
+    return;
+  }
+  let text = "📋 Pending Orders:\n";
+  pendingOrders.forEach(o => {
+    text += ` - ${o.orderId} | ${o.customerName} | ${o.orderType}\n`;
+  });
+  document.getElementById("output").innerText = text;
+}
+
+function viewCompleted() {
+  if (completedOrders.length === 0) {
+    document.getElementById("output").innerText = "No completed orders yet.";
+    return;
+  }
+  let text = "✅ Completed Orders (most recent first):\n";
+  [...completedOrders].reverse().forEach(o => {
+    text += ` - ${o.orderId} | ${o.customerName} | ${o.orderType}\n`;
+  });
+  document.getElementById("output").innerText = text;
+}
+
+function clearInputs() {
+  document.getElementById("orderId").value = "";
+  document.getElementById("customerName").value = "";
+  document.getElementById("items").value = "";
+}
+</script>
+</body>
+</html>
